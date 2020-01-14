@@ -5,6 +5,7 @@ const cors = require('cors')
 const blogsRouter = require('./controllers/blogs')
 const mongoose = require('mongoose')
 const config = require('./utils/config')
+const middleware = require('./utils/middleware')
 
 mongoose.connect( config.MONGODB_URI, { useNewUrlParser: true , useUnifiedTopology: true })
   .then(() => {
@@ -15,7 +16,9 @@ mongoose.connect( config.MONGODB_URI, { useNewUrlParser: true , useUnifiedTopolo
   })  
 app.use(cors())
 app.use(bodyParser.json())
+app.use(middleware.reqLogger)
 
 app.use('/api/blogs', blogsRouter)
+app.use(middleware.errorHandler)
 
 module.exports = app
