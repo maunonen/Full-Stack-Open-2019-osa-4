@@ -1,12 +1,15 @@
 /* eslint-disable no-undef */
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
+const User = require('../models/user')
 const _ = require('lodash')
 
 blogsRouter.get('/', async (req, res, next) => {
   
   try {
-    const blogs = await Blog.find({})
+    const blogs = await Blog
+      .find({})
+      .populate('user', { username : 1, name : 1 } )
     res.json( blogs.map( blog => blog.toJSON()))
   } catch( err ){
     next(err)
@@ -15,19 +18,21 @@ blogsRouter.get('/', async (req, res, next) => {
 )
 
 blogsRouter.post('/', async (req, res, next) => {
-  
-  if ( req.body.title === undefined || req.body.url === undefined){
-    return res.status(400).send()
-  }
-  const blog = new Blog({
-    title : req.body.title,
-    author : req.body.author, 
-    url: req.body.url, 
-    likes: req.body.likes || 0
-  })
-
   try {
+    if ( req.body.title === undefined || req.body.url === undefined){
+      return res.status(400).send()
+    }
+    const user = await User.findById(req.body.user)
+    const blog = new Blog({
+      title : req.body.title,
+      author : req.body.author, 
+      url: req.body.url, 
+      likes: req.body.likes || 0, 
+      user : req.body.user
+    })
     const savedBlog = await blog.save()
+    user.blogs = user.blogs.concat( savedBlog._id)
+    await user.save()
     res.status(201).json(savedBlog.toJSON())
   } catch (err){
     next(err)
