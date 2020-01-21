@@ -4,6 +4,7 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const blogsRouter = require('./controllers/blogs')
 const userRoute = require('./controllers/users')
+const loginRouter = require('./controllers/login')
 const mongoose = require('mongoose')
 const config = require('./utils/config')
 const middleware = require('./utils/middleware')
@@ -20,8 +21,10 @@ app.use(cors())
 app.use(bodyParser.json())
 app.use(middleware.reqLogger)
 
+app.use('/api/login', loginRouter)
 app.use('/api/blogs', blogsRouter)
 app.use('/api/users', userRoute)
+
 app.use(middleware.errorHandler)
 
 module.exports = app

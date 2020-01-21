@@ -6,21 +6,22 @@ const api = supertest(app)
 const Blog = require('../models/blog')
 const helper = require('./test_helper')
 const User = require('../models/user')
-
+let token
 beforeEach( async () => {
   await Blog.deleteMany({})
   const blogsObject = helper.initialBlogs.map(blog => new Blog(blog))
   const promiseArray = blogsObject.map( blog => blog.save())
-  await User.deleteMany({})
+  
   await Promise.all( promiseArray)
 })
 
 describe('Test USER Routes', ()=> {
+
   test('Create new user with name which already exist in DB', async () => {
     const newUser = {
-      'username' : 'alex11', 
-      'password' : 'alex11', 
-      'name' : 'alex11' 
+      'username' : 'alex11777', 
+      'password' : 'alex11777', 
+      'name' : 'alex11777' 
     }
     await api
       .post('/api/users')
@@ -42,11 +43,11 @@ describe('Test USER Routes', ()=> {
       .send(newUser)
       .expect(400)
   })
-  test('Create new uaser successfully with correct data', async () => {
+  test('Create new user successfully with correct data', async () => {
     const newUser = {
-      'username' : 'alex11', 
-      'password' : 'alex11', 
-      'name' : 'alex11' 
+      'username' : 'alex1111', 
+      'password' : 'alex1111', 
+      'name' : 'alex1111' 
     }
     await api
       .post('/api/users')
@@ -56,6 +57,26 @@ describe('Test USER Routes', ()=> {
 })
 
 describe('Test API for blog list app', () => {
+  beforeAll( async () => {
+    token = await helper.setupDBLoginUser()
+  }) 
+  afterAll( async ()=> {
+    await User.deleteMany({})
+  })
+
+  test('Add new blog with valid blog object', async () => {
+    const brokenToken = 'vsdvsdvs'
+    const newBlog = {
+      url  : "some title", 
+      title  : "some title"
+    }
+    await api
+      .post('/api/blogs')
+      .set('Authorization', 'bearer ' + brokenToken)
+      .send( newBlog)
+      .expect(401)
+  })
+
   test('blogs returned in JSON format', async ()=> {
     await api
       .get('/api/blogs')
@@ -65,41 +86,44 @@ describe('Test API for blog list app', () => {
 
   test('returned 3 blog items', async ()=> {
     const res = await api.get('/api/blogs')
-    
     expect(res.body.length).toBe(helper.initialBlogs.length)
   })
+
   test('unique identifier name is id', async ()=> {
     const res = await api.get('/api/blogs')
     expect(res.body[0].id).toBeDefined()
 
   })
 
-  xtest('HTTP POST request creates a new blog post', async ()=> {
+  test('HTTP POST request creates a new blog post', async ()=> {
+    
     const newBlog = {
-      title : 'some title 2',
-	    author : 'some author 3',
-      url : 'some url',
-      likes : 3
+      url  : "some title", 
+      title  : "some title"
     }
     await api
       .post('/api/blogs')
+      .set('Authorization', 'bearer ' + token)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
-    const blogList = await api.get('/api/blogs')
+    /* const blogList = await api.get('/api/blogs')
     expect( blogList.body.length).toBe( helper.initialBlogs.length + 1)
     const blogTitles = blogList.body.map( blog => blog.title)
-    expect(blogTitles).toContain('some title 2')
+    expect(blogTitles).toContain('some title 2') */
   })
 
-  xtest('Likes property equal to 0 if it not exist in request' , async () => {
+  test('Likes property equal to 0 if it not exist in request' , async () => {
+    
     const newBlog = {
       title : 'some title 2',
       author : 'some author 3',
       url : 'some url'  
     }
+
     const savedBlogs = await api
       .post('/api/blogs')
+      .set('Authorization', 'bearer ' + token)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -107,20 +131,29 @@ describe('Test API for blog list app', () => {
   })
   
   test('If title or url properrtie are missing send status code 400', async () => {
+    
+    const userToken = await api
+      .post('/api/login')
+      .send({ 
+        username : 'alex11', 
+        password : 'alex11'
+      })
+      .set('Authorization', 'bearer ' + token)
+    
     const blogTitleMiss = {
-      author : 'some author 3',
       url : 'some url'  
     }
     const blogUrlMiss = {
-      author : 'some author 3',
-      url : 'some url'  
+      title : 'some url'  
     }
     await api
       .post('/api/blogs')
+      .set('Authorization', 'bearer ' + token)
       .send(blogTitleMiss)
       .expect(400)
     await api
       .post('/api/blogs')
+      .set('Authorization', 'bearer ' + token)
       .send(blogUrlMiss)
       .expect(400)
   })

@@ -1,8 +1,18 @@
 /* eslint-disable no-undef */
 const blogsRouter = require('express').Router()
+const jwt = require('jsonwebtoken')
 const Blog = require('../models/blog')
 const User = require('../models/user')
 const _ = require('lodash')
+
+
+const getTokenFrom = request => {
+  const authorization = request.get('authorization')
+  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+    return authorization.substring(7)
+  }
+  return null
+}
 
 blogsRouter.get('/', async (req, res, next) => {
   
@@ -18,17 +28,25 @@ blogsRouter.get('/', async (req, res, next) => {
 )
 
 blogsRouter.post('/', async (req, res, next) => {
+  
+  const token = getTokenFrom(req)
+  const body = req.body
   try {
-    if ( req.body.title === undefined || req.body.url === undefined){
-      return res.status(400).send()
+    const decodedToken = jwt.verify(token, process.env.SECRET)
+    if ( !token || !decodedToken.id ){
+      return res.status(401).json({ error : 'token missing or invalid'})
     }
-    const user = await User.findById(req.body.user)
+    const user = await User.findById(decodedToken.id)
+    if (!user){ 
+      return res.status(400).json({ error : 'User not found in Database'})
+    }
+
     const blog = new Blog({
-      title : req.body.title,
-      author : req.body.author, 
-      url: req.body.url, 
-      likes: req.body.likes || 0, 
-      user : req.body.user
+      title : body.title,
+      author : user.name, 
+      url: body.url, 
+      likes: body.likes || 0, 
+      user : body.user
     })
     const savedBlog = await blog.save()
     user.blogs = user.blogs.concat( savedBlog._id)
