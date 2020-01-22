@@ -95,8 +95,31 @@ describe('Test API for blog list app', () => {
 
   })
 
+  test('User try to create blogs with valid data but invalid token GET 401', async ()=> {
+
+    const newBlog = {
+      url  : "some title", 
+      title  : "some title"
+    }
+    const invalidToken = 'yyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkphcmkxMTEiLCJpZCI6IjVlMjgxYjgxM2QwODhlM2Y2ZGUxZjYzNiIsImlhdCI6MTU3OTY4Njc5N30.FDej0uboK7LA4tYheVz1qDdG8iJB17MCwYeCFkfi2I0'
+    await api
+      .post('/api/blogs')
+      .set('Authorization', 'bearer ' + invalidToken)
+      .send(newBlog)
+      .expect(401)
+    await api
+      .post('/api/blogs')
+      .set('Authorization', 'bearer ')
+      .send(newBlog)
+      .expect(401)
+    await api
+      .post('/api/blogs')
+      .set('Authorization', 'bearer ' + '893797')
+      .send(newBlog)
+      .expect(401)      
+  })
+
   test('HTTP POST request creates a new blog post', async ()=> {
-    
     const newBlog = {
       url  : "some title", 
       title  : "some title"

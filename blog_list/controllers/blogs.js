@@ -3,6 +3,7 @@ const blogsRouter = require('express').Router()
 const jwt = require('jsonwebtoken')
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const middleware = require('../utils/middleware')
 const _ = require('lodash')
 
 
@@ -27,26 +28,18 @@ blogsRouter.get('/', async (req, res, next) => {
 } 
 )
 
-blogsRouter.post('/', async (req, res, next) => {
+blogsRouter.post('/', middleware.auth, async (req, res, next) => {
   
-  const token = getTokenFrom(req)
   const body = req.body
+  const user = req.user
+  
   try {
-    const decodedToken = jwt.verify(token, process.env.SECRET)
-    if ( !token || !decodedToken.id ){
-      return res.status(401).json({ error : 'token missing or invalid'})
-    }
-    const user = await User.findById(decodedToken.id)
-    if (!user){ 
-      return res.status(400).json({ error : 'User not found in Database'})
-    }
-
     const blog = new Blog({
       title : body.title,
-      author : user.name, 
+      author : req.user.username, 
       url: body.url, 
       likes: body.likes || 0, 
-      user : body.user
+      user : user._id
     })
     const savedBlog = await blog.save()
     user.blogs = user.blogs.concat( savedBlog._id)
