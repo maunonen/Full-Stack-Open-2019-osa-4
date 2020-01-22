@@ -32,7 +32,7 @@ blogsRouter.post('/', middleware.auth, async (req, res, next) => {
   
   const body = req.body
   const user = req.user
-  
+
   try {
     const blog = new Blog({
       title : body.title,
@@ -50,11 +50,26 @@ blogsRouter.post('/', middleware.auth, async (req, res, next) => {
   }
 })
 
-blogsRouter.delete('/:id', async (req, res, next) => {
+blogsRouter.delete('/:id', middleware.auth, async (req, res, next) => {
   try {
-    //console.log('ID', req.params.id)
-    await Blog.findByIdAndRemove(req.params.id)
-    res.status(200).end()
+    // send error if params not exist
+    if ( !req.params.id) {
+      return res.status(400).json({ error : 'Please provide order ID'})
+    }
+    // Find blog from Blog collection
+    const blog = await Blog.findById( { _id : req.params.id })
+    if ( !blog) {
+      return res.status(404).json({ error : 'Blog not found'})
+    }
+    if ( blog.author.toString() === req.user.username.toString()) {
+      // delete Blog from Blog Collection
+      await Blog.findByIdAndRemove(req.params.id)
+      res.status(200).end()
+      
+    } else {
+      // Send res you don't have permisssion
+      return res.status(403).json({ error : `You don't have permission to delete this blogs` })
+    }
   } catch (err){
     next(err)
   }

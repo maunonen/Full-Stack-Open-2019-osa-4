@@ -181,15 +181,44 @@ describe('Test API for blog list app', () => {
       .expect(400)
   })
 
-  test('Blog will be delete successfully ', async () => {
+  test('User try to delete blog with invalid token get status 401', async () => {
     const blogToDeleteID = helper.initialBlogs[0].id    
     await api
       .delete(`/api/blogs/${ blogToDeleteID }`)
+      .set('Authorization', 'bearer ' + token + '6768')
+      .expect(401)
+  })
+  test('User try to delete blog with invalid blog ID, with valid token get status 404 or 400', async () => {
+    const blogToDeleteID = helper.initialBlogs[0].id    
+    
+    await api
+      .delete(`/api/blogs/${ blogToDeleteID  } 7978`)
+      .set('Authorization', 'bearer ' + token )
+      .expect(400)
+    
+  })
+  
+  test('User try to delete blog with valid token with out permission', async () => {
+    const blogToDeleteID = helper.blogObjectID2   
+    const allBlogs = await Blog.find({})
+    console.log('ALL BLOG', allBlogs )
+    await api
+      .delete(`/api/blogs/${ blogToDeleteID }`)
+      .set('Authorization', 'bearer ' + token )
+      .expect(403)
+  })
+
+
+  test('Blog will be delete successfully ', async () => {
+    const blogToDeleteID = helper.blogObjectID1
+    await api
+      .delete(`/api/blogs/${ blogToDeleteID }`)
+      .set('Authorization', 'bearer ' + token)
       .expect(200)
   })
 
   test('Blog will be update successfully ', async () => {
-    const blogToUpdateId = helper.initialBlogs[0].id
+    const blogToUpdateId = helper.blogObjectID1
     const blogToUpdateContent = {
       likes : 2, 
       url : 'some url 2222'

@@ -5,6 +5,9 @@ const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 const loginUserId = new mongoose.Types.ObjectId()
+const blogObjectID1 = new mongoose.Types.ObjectId()
+const blogObjectID2 = new mongoose.Types.ObjectId()
+const blogObjectID3 = new mongoose.Types.ObjectId()
 
 const setupDBLoginUser = async () => {
   try {
@@ -26,23 +29,23 @@ const setupDBLoginUser = async () => {
 
 const initialBlogs = [
   {
-    "id": "5e1c6267a5baec1980504336",
+    "_id": blogObjectID1,
     "title": "some title",
-    "author": " some author",
+    "author": "alex11",
     "url": "https://yle.fi/",
     "likes": 67
   },
   {
-    "id": "5e1c6d15eaa43c1dfecd55cc",
+    "_id": blogObjectID2,
     "title": "some title 1",
-    "author": " some author 1",
+    "author": "some author 1",
     "url": "https://yle.fi/",
     "likes": 1
   }, 
   {
-    "id": "5e1c6d3836fd0f1e06a5d3eb", 
+    "_id": blogObjectID3, 
     "title": "some title 2",
-    "author": " some author 3",
+    "author": "alex11",
     "url": "https://yle.fi/",
     "likes": 3
   }
@@ -55,6 +58,7 @@ const blogsDB = async () => {
   
 module.exports = {
   initialBlogs, blogsDB, 
-  setupDBLoginUser 
+  setupDBLoginUser, 
+  blogObjectID1, blogObjectID2, blogObjectID3
 }
   
